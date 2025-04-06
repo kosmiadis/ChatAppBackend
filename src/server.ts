@@ -1,6 +1,10 @@
 import AppConfig from "./config/config";
 import app from "./app";
+import connectToDB from "./db/db";
 
-app.listen(AppConfig.port, () => {
-    console.log('running on http://localhost:',AppConfig.port);
-})
+(async function () {
+    await connectToDB();
+    app.listen(AppConfig.port, () => {
+        console.log(`🚀 Server is running on http://localhost:${AppConfig.port}`);
+    });
+})();

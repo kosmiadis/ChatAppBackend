@@ -1,17 +1,17 @@
+
 import { Request, Response, NextFunction } from 'express';
+import { handleAuthError } from '../ErrorHandling/handleAuthError';
+export const errorHandler = (err: any, req: Request, res: Response<{success: boolean, message: string, errors: Object}>, next: NextFunction) => {
+  let errors = { username: '', email: '', password: '' };
+  if (err?.message.includes('User validation failed')) {
+    handleAuthError(err, errors);
+  }
 
-export interface AppError extends Error {
-    status?: number;
-}
-
-export const errorHandler = (
-    err: AppError,
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    console.error(err);
-    res.status(err.status || 500).json({
-      message: err.message || 'Internal Server Error',
+  const statusCode = err.httpCode || 500;
+    const message = err.message || 'Something went wrong!'
+    res.status(statusCode).json({
+      success: false,
+      message,
+      errors
     });
   };
