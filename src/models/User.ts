@@ -3,11 +3,12 @@ import { hash, compare } from 'bcrypt';
 import { isEmail } from 'validator';
 
 interface UserI {
-    username: string,
-    email: string,
-    password: string,
-    createdAt: Date,
-    updatedAt: Date
+    username: string;
+    email: string;
+    password: string;
+    status: 'online' | 'offline';
+    createdAt: Date;
+    updatedAt: Date;
 }
 
 interface UserMethods {
@@ -34,10 +35,16 @@ const UserSchema = new Schema<UserI, UserModel, UserMethods>({
         required: [true, 'Password is required!'], 
         minlength: [8, 'Password must be at least 8 characters!']
     },
+    status: {
+        type: String,
+        enum: ['online', 'offline'],
+        default: 'online'
+    }
 }, { timestamps: true} )
 
 /* Hashing password before saving user */
 UserSchema.pre('save', async function(next) {
+    if (!this.isModified('password')) return next();
     const hashedPassword = await hash(this.password, 10);
     this.password = hashedPassword
     next();

@@ -1,0 +1,2 @@
+1. Reset password route (email token based logic);
+2. Add auth protection middleware.
