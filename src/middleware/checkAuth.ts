@@ -20,7 +20,5 @@ export function checkAuth (req: Request, res: Response, next: NextFunction) {
     
     req.email = decoded.email;
     req._id = decoded._id;
-
-    console.log(decoded);
     next();
 }

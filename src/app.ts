@@ -7,10 +7,10 @@ import cors from 'cors';
 
 const app = express();
 
+app.use(express.static('/src/public'))
 app.use(cors({ origin: AppConfig.origin_url, credentials: true }))
 app.use(express.json());
 app.use(cookieParser());
-
 
 app.use('/auth', authRouter);
 

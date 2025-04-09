@@ -2,7 +2,10 @@ import { Request, Response } from "express";
 import User from "../models/User";
 import { createToken } from "../util/jwt/createToken";
 import { ApiError } from "../ErrorHandling/ApiError";
-import { sendSuccess, sendCookie } from "../util/responses/responseTemplate";
+import { sendSuccess, sendCookie, sendError } from "../util/responses/responseTemplate";
+import { upload } from "../util/multer/upload";
+import multer, { MulterError } from "multer";
+import { MulterConfig } from "../util/multer/multer.config";
 
 export async function login (req: Request<{},{},{email: string, password: string}>, res: Response) {
     const { email, password } = req.body;
@@ -60,16 +63,18 @@ export async function resetPassword (req: Request<{},{},{ password: string, newP
 }
 
 export async function uploadImage (req: Request, res: Response) {
-    const { email } = req;
-    //logic goes here
-    //use multer "npm i multer"
+    if (!req.file) sendError(res, 'Something went wrong while uploading file', {})
+    sendSuccess(res, 'Image uploaded!');
 }
 
 export async function me (req: Request, res: Response) {
     const { email } = req;
     await User.findOne({ email })
     .then((foundUser) => {
-        return res.status(200).json({ user: foundUser })
+        sendSuccess(res, 'Authenticated', { user: foundUser });
+    })
+    .catch(e => {
+        sendError(res, 'Something went wrong while loading account information...', {});
     })
 }   
 

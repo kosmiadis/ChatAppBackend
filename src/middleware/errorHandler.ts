@@ -1,4 +1,3 @@
-
 import { Request, Response, NextFunction } from 'express';
 import { handleAuthError } from '../ErrorHandling/handleAuthError';
 import { sendError } from '../util/responses/responseTemplate';
