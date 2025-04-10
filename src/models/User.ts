@@ -2,7 +2,7 @@ import { Model, model, Schema } from "mongoose";
 import { hash, compare } from 'bcrypt';
 import { isEmail } from 'validator';
 
-interface UserI {
+export interface UserI {
     username: string;
     email: string;
     password: string;

@@ -4,6 +4,7 @@ import { createToken } from "../util/jwt/createToken";
 import { ApiError } from "../ErrorHandling/ApiError";
 import { sendSuccess, sendCookie, sendError } from "../util/responses/responseTemplate";
 import { hash } from "bcrypt";
+import { UserI } from '../models/User';
 
 export async function login (req: Request<{},{},{email: string, password: string}>, res: Response) {
     const { email, password } = req.body;
@@ -81,6 +82,20 @@ export async function me (req: Request, res: Response) {
     })
 }   
 
+export async function updateAccountInfo (req: Request<{}, {}, {updates: UserI}>, res: Response) {
+    const { email } = req;
+    const updates = req.body.updates;
+
+    await User.updateOne({ email }, {
+        $set: { ...updates }
+    })
+    .then(({ upsertedId }) => {
+        sendSuccess(res, 'Account info updated successfuly!', { upsertedId });
+    })
+    .catch(e => {
+        throw new ApiError(400, 'Account was not updated, something went wrong!');
+    })
+}
 export async function deleteAccount (req: Request, res: Response) {
     const { email } = req;
     await User.deleteOne({ email })
@@ -91,3 +106,4 @@ export async function deleteAccount (req: Request, res: Response) {
         throw e;
     })
 }
+

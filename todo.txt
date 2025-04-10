@@ -4,5 +4,5 @@
 
 **IMPORTANT
 4. Update account info route (username)
-5. fix reset password bug (it does change the password even when the password for auth is invalid);
+5. fix reset password bug (it does change the password even when the password for auth is invalid) #(DONE)
 
