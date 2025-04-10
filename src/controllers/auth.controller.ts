@@ -3,9 +3,7 @@ import User from "../models/User";
 import { createToken } from "../util/jwt/createToken";
 import { ApiError } from "../ErrorHandling/ApiError";
 import { sendSuccess, sendCookie, sendError } from "../util/responses/responseTemplate";
-import { upload } from "../util/multer/upload";
-import multer, { MulterError } from "multer";
-import { MulterConfig } from "../util/multer/multer.config";
+import { hash } from "bcrypt";
 
 export async function login (req: Request<{},{},{email: string, password: string}>, res: Response) {
     const { email, password } = req.body;
@@ -44,14 +42,19 @@ export async function resetPassword (req: Request<{},{},{ password: string, newP
 
     await User.findOne({ email })
     .then( async (foundUser) => {
-        const isValidPass = foundUser?.isValidPassword(password) 
+        
+        const isValidPass = await foundUser?.isValidPassword(password) 
         if (!isValidPass) {
             throw new ApiError(401, 'Incorrect Password');
         }
-        foundUser!.password = newPassword
-        await foundUser!.save()
-        .then(() => {
-            sendSuccess(res, 'Password reset was successful');
+
+        const hashedNewPassword = await hash(newPassword, 10);
+
+        await User.updateOne({ email }, {
+            $set: { password: hashedNewPassword }
+        })
+        .then(({ modifiedCount, upsertedId }) => {
+            sendSuccess(res, 'Password reset was successful', { upsertedId, modifiedCount });
         })
         .catch(e => {
             throw e;
@@ -74,7 +77,7 @@ export async function me (req: Request, res: Response) {
         sendSuccess(res, 'Authenticated', { user: foundUser });
     })
     .catch(e => {
-        sendError(res, 'Something went wrong while loading account information...', {});
+        sendError(res, 'Something went wrong while loading account information...', { message: e.message });
     })
 }   
 
