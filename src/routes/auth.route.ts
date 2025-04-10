@@ -9,6 +9,7 @@ const authRouter = Router();
 
 authRouter.post('/login', catchAsync(authController.login))
 authRouter.post('/signup', catchAsync(authController.signup))
+authRouter.post('/update-account-info', catchAsync(authController.updateAccountInfo))
 authRouter.put('/reset-password', checkAuth, catchAsync(authController.resetPassword))
 authRouter.delete('/delete-account', checkAuth, catchAsync(authController.deleteAccount))
 authRouter.get('/me', checkAuth, catchAsync(authController.me))

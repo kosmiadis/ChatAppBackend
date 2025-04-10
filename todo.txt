@@ -3,6 +3,6 @@
 3. Finish Password Reset Route #(DONE)
 
 **IMPORTANT
-4. Update account info route (username)
+4. Update account info route (username) #(DONE)
 5. fix reset password bug (it does change the password even when the password for auth is invalid) #(DONE)
 

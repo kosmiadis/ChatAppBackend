@@ -96,6 +96,7 @@ export async function updateAccountInfo (req: Request<{}, {}, {updates: UserI}>,
         throw new ApiError(400, 'Account was not updated, something went wrong!');
     })
 }
+
 export async function deleteAccount (req: Request, res: Response) {
     const { email } = req;
     await User.deleteOne({ email })
