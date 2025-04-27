@@ -6,7 +6,9 @@ export interface UserI {
     username: string;
     email: string;
     password: string;
+    avatar: string,
     status: 'online' | 'offline';
+    contacts: string[]
     createdAt: Date;
     updatedAt: Date;
 }
@@ -35,10 +37,18 @@ const UserSchema = new Schema<UserI, UserModel, UserMethods>({
         required: [true, 'Password is required!'], 
         minlength: [8, 'Password must be at least 8 characters!']
     },
+    contacts: {
+        type: [],
+        default: []
+    },
+    avatar: {
+        type: String,
+        default: '',
+    },
     status: {
         type: String,
         enum: ['online', 'offline'],
-        default: 'online'
+        default: 'offline'
     }
 }, { timestamps: true} )
 

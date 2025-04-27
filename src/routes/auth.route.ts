@@ -14,5 +14,6 @@ authRouter.put('/reset-password', checkAuth, catchAsync(authController.resetPass
 authRouter.delete('/delete-account', checkAuth, catchAsync(authController.deleteAccount))
 authRouter.get('/me', checkAuth, catchAsync(authController.me))
 authRouter.post('/upload-image', checkAuth, upload.single(MulterConfig.fileNameId), catchAsync(authController.uploadImage))
+authRouter.post('/logout', checkAuth, catchAsync(authController.logout));
 
 export default authRouter;

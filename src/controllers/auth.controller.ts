@@ -4,14 +4,14 @@ import { createToken } from "../util/jwt/createToken";
 import { ApiError } from "../ErrorHandling/ApiError";
 import { sendSuccess, sendCookie, sendError } from "../util/responses/responseTemplate";
 import { hash } from "bcrypt";
-import { UserI } from '../models/User';
+import Message from "../models/Message";
 
 export async function login (req: Request<{},{},{email: string, password: string}>, res: Response) {
     const { email, password } = req.body;
     const foundUser = await User.findOne({ email })
 
     if (!foundUser) {
-        throw new ApiError(404, 'User not found');
+        throw new ApiError(404, 'Account does not exist');
     }
     const isValid = await foundUser.isValidPassword(password);
 
@@ -19,15 +19,21 @@ export async function login (req: Request<{},{},{email: string, password: string
         throw new ApiError(401, 'Invalid Credentials')
     }
     const token = createToken(foundUser._id, foundUser.email);
-    sendCookie(res, '_t', token, 'Login Successful', foundUser);
+    await User.updateOne({ email }, {
+        $set: { status: 'online'}
+    })
+    sendCookie(res, '_t', token, 'Login Successful', { user: foundUser });
 }
 
 export async function signup (req: Request<{}, {}, {username: string, email: string, password: string}>, res: Response) {
     const { username, email, password } = req.body;
     await new User({ username, email, password }).save()
-    .then((user) => {
+    .then(async (user) => {
         const token = createToken(user._id, user.email);
-        sendCookie(res, '_t', token, 'SignUp Successful', user);
+        await User.updateOne({ email }, {
+            $set: { status: 'online' }
+        })
+        sendCookie(res, '_t', token, 'SignUp Successful', { user });
     })
     .catch((e: Error) => {
         if (e.message.includes('User validation failed')) {
@@ -78,11 +84,11 @@ export async function me (req: Request, res: Response) {
         sendSuccess(res, 'Authenticated', { user: foundUser });
     })
     .catch(e => {
-        sendError(res, 'Something went wrong while loading account information...', { message: e.message });
+        sendError(res, 'Something went wrong while loading account information...', { message: 'Something went wrong while loading account information...' });
     })
 }   
 
-export async function updateAccountInfo (req: Request<{}, {}, {updates: UserI}>, res: Response) {
+export async function updateAccountInfo (req: Request<{}, {}, {updates: { username?: string, avatar?: string }}>, res: Response) {
     const { email } = req;
     const updates = req.body.updates;
 
@@ -98,13 +104,45 @@ export async function updateAccountInfo (req: Request<{}, {}, {updates: UserI}>,
 }
 
 export async function deleteAccount (req: Request, res: Response) {
-    const { email } = req;
+    const { _id, email } = req;
+
+    //first delete all the messages that are related to the user.
+    //then remove the user from any contacts array from other users.
+    
+    try {
+        await Message.deleteMany({ $or: [{ senderId: _id, receiverId: _id }]})
+        await User.updateMany({}, {
+            $pull: { contacts: _id }
+        })
+    }
+    catch (e) {
+        return sendError(res, 'Something went wrong, account was not deleted', { message: 'Account Deletion Failed'})
+    }
+    
+    //then delete the user
     await User.deleteOne({ email })
     .then(({ deletedCount }) => {
-        sendSuccess(res, 'Account deleted successfuly', { deletedCount });
+        if (deletedCount === 1) {
+            sendSuccess(res, 'Account deleted successfuly', { deletedCount });
+        }
+        else {
+            sendError(res, 'Something went wrong, account was not deleted', { message: 'Account Deletion Failed'});
+        }
     })
     .catch(e => {
         throw e;
     })
+
+    
 }
+
+export async function logout (req: Request, res: Response) {
+    const { email } = req;
+
+    await User.updateOne({ email } , {
+        $set: { status: 'offline' }
+    })
+    sendCookie(res, '_t', '', 'Logout Successful');
+}
+
 

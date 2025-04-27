@@ -1,8 +1,0 @@
-1. Upload Image route #(DONE)
-2. Authorization Check middleware #(DONE)
-3. Finish Password Reset Route #(DONE)
-
-**IMPORTANT
-4. Update account info route (username) #(DONE)
-5. fix reset password bug (it does change the password even when the password for auth is invalid) #(DONE)
-

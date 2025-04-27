@@ -34,7 +34,7 @@ export function sendError<T>(res: Response, message: string, errors: T, code = 5
     const response: ApiResponse<T> = {
       status: 'error',
       message,
-      errors: errors, 
+      errors, 
       code
     };
     return res.status(code).json({ ...response })

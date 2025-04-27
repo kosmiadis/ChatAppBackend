@@ -4,7 +4,7 @@ import { IFile } from "./IFile";
 
 declare module "express-serve-static-core" {
     interface Request {
-        email?: string,
+        email?: string | undefined,
         _id?: mongoose.Types.ObjectId,
         files: IFile 
     }
