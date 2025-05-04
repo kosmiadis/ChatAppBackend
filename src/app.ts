@@ -9,7 +9,6 @@ import cors from 'cors';
 import { Server, Socket } from 'socket.io';
 import http from 'http';
 import { v4 as uuid } from "uuid";
-import User from "./models/User";
 
 const app = express();
 export const httpServer = http.createServer(app);

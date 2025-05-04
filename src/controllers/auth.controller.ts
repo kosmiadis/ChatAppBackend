@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import User from "../models/User";
+import User, { UserI } from "../models/User";
 import { createToken } from "../util/jwt/createToken";
 import { ApiError } from "../ErrorHandling/ApiError";
 import { sendSuccess, sendCookie, sendError } from "../util/responses/responseTemplate";
@@ -52,7 +52,7 @@ export async function resetPassword (req: Request<{},{},{ password: string, newP
         
         const isValidPass = await foundUser?.isValidPassword(password) 
         if (!isValidPass) {
-            throw new ApiError(401, 'Incorrect Password');
+            return sendError(res, 'Incorrect Password', { message: 'Incorrect Password'}, 400)
         }
 
         const hashedNewPassword = await hash(newPassword, 10);
@@ -81,34 +81,60 @@ export async function me (req: Request, res: Response) {
     const { email } = req;
     await User.findOne({ email })
     .then((foundUser) => {
-        sendSuccess(res, 'Authenticated', { user: foundUser });
+        const user = {
+            _id: foundUser?._id,
+            username: foundUser?.username,
+            email: foundUser?.email,
+            contacts: foundUser?.contacts,
+            avatar: foundUser?.avatar,
+            status: foundUser?.status,
+            createdAt: foundUser?.createdAt,
+            updatedAt: foundUser?.updatedAt,
+        }
+        sendSuccess(res, 'Authenticated', { user });
     })
     .catch(e => {
         sendError(res, 'Something went wrong while loading account information...', { message: 'Something went wrong while loading account information...' });
     })
 }   
 
-export async function updateAccountInfo (req: Request<{}, {}, {updates: { username?: string, avatar?: string }}>, res: Response) {
-    const { email } = req;
-    const updates = req.body.updates;
+export async function editProfile (req: Request<{}, {}, {username?: string }>, res: Response) {
+    const { _id } = req;
+    const { username } = req.body;
 
-    await User.updateOne({ email }, {
-        $set: { ...updates }
-    })
-    .then(({ upsertedId }) => {
-        sendSuccess(res, 'Account info updated successfuly!', { upsertedId });
+    await User.findOne({ username })
+    .then(async (foundUser) => {
+        if (foundUser) {
+            return sendError(res, 'Username already in use', {  message: 'Username already in use!' })
+        } else {
+            await User.updateOne({ _id }, {
+                $set: { username }
+            })
+            .then(({ modifiedCount }) => {
+                if (modifiedCount === 1) {
+                    sendSuccess(res, 'Account info updated successfuly!', { modifiedCount });
+                }
+                else {
+                    throw new ApiError(400, 'Account was not updated, something went wrong!');
+                }
+            })
+            .catch(e => {
+                console.log(e.message);
+                throw new ApiError(400, 'Account was not updated, something went wrong!');
+            })
+        }
     })
     .catch(e => {
-        throw new ApiError(400, 'Account was not updated, something went wrong!');
+        console.log(e.message);
+        throw new ApiError(400, 'Something went wrong while updating username!');
     })
+
+    
 }
 
 export async function deleteAccount (req: Request, res: Response) {
     const { _id, email } = req;
 
-    //first delete all the messages that are related to the user.
-    //then remove the user from any contacts array from other users.
-    
     try {
         await Message.deleteMany({ $or: [{ senderId: _id, receiverId: _id }]})
         await User.updateMany({}, {
